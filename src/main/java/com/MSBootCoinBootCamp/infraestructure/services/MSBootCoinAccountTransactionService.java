@@ -2,14 +2,14 @@ package com.MSBootCoinBootCamp.infraestructure.services;
 
 
 import com.MSBootCoinBootCamp.application.exception.EntityNotExistsException;
-import com.MSBootCoinBootCamp.application.exception.ResourceNotCreatedException;
-import com.MSBootCoinBootCamp.domain.beans.MSBootCoinOperationDTO;
+import com.MSBootCoinBootCamp.application.exception.ResourceSpecificException;
+import com.MSBootCoinBootCamp.domain.dtos.MSBootCoinOperationDTO;
 import com.MSBootCoinBootCamp.domain.enums.TransactionType;
 import com.MSBootCoinBootCamp.domain.model.MSBootCoinAccount;
 import com.MSBootCoinBootCamp.domain.model.Transaction;
 import com.MSBootCoinBootCamp.domain.repository.TransactionRepository;
+import com.MSBootCoinBootCamp.infraestructure.broker.Accountbroker;
 import com.MSBootCoinBootCamp.infraestructure.interfaces.IMSBootCoinAccountTransactionService;
-import com.MSBootCoinBootCamp.infraestructure.kafkaservices.DebitCardStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class MSBootCoinAccountTransactionService implements IMSBootCoinAccountTr
     @Autowired
     MSBootCoinAccountService accountService;
     @Autowired
-    DebitCardStream debitCardStream;
+    Accountbroker accountbroker;
     //Crud
     @Override
     public Flux<Transaction> findAll() {
@@ -60,37 +60,25 @@ public class MSBootCoinAccountTransactionService implements IMSBootCoinAccountTr
     @Override
     public Mono<Transaction> doPayment(MSBootCoinOperationDTO operationDTO) {
         Mono<MSBootCoinAccount> fromAccount = accountService.findByCellphoneNumber(operationDTO.getFromCellphoneAccount())
-                .switchIfEmpty(Mono.error(new EntityNotExistsException("Origin cellphone doesn't exists")));
+                .switchIfEmpty(Mono.error(new EntityNotExistsException("Origin phone number doesn't exists")));
 
         Mono<MSBootCoinAccount> toAccount = accountService.findByCellphoneNumber(operationDTO.getFromCellphoneAccount())
-                .switchIfEmpty(Mono.error(new EntityNotExistsException("Destiny cellphone doesn't exists")));
+                .switchIfEmpty(Mono.error(new EntityNotExistsException("Destiny phone number doesn't exists")));
 
 
         return Mono.zip(fromAccount,toAccount)
                 .filter(a-> !(operationDTO.getFromCellphoneAccount().equals(operationDTO.getToCellphoneAccount())))
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Cellphone cannot be the same")))
+                .switchIfEmpty(Mono.error(new ResourceSpecificException("Phone number cannot be the same")))
 
-                .flatMap(a-> accountService.updateBalanceReceive(a.getT1().getCellphoneNumber(), a.getT1().getLinkedDebitCard(), operationDTO.getAmount())
+                .flatMap(a-> accountService.updateBalanceReceive(a.getT1().getCellphoneNumber(), operationDTO.getAmount())
 
                         .thenReturn(a))
-                .flatMap(a-> accountService.updateBalanceSend(a.getT2().getCellphoneNumber(), a.getT2().getLinkedDebitCard() ,operationDTO.getAmount())
+                .flatMap(a-> accountService.updateBalanceSend(a.getT2().getCellphoneNumber() ,operationDTO.getAmount())
                         .thenReturn(a))
                 .then(Mono.just(operationDTO))
                 .flatMap(r-> savedoPayment.apply(r))
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Transaction error")));
+                .switchIfEmpty(Mono.error(new ResourceSpecificException("Transaction error")));
     }
-
-    @Override
-    public Mono<Transaction> doReceive(MSBootCoinOperationDTO operationDTO) {
-        return null;
-    }
-    //Business Logic
-    //Reactivo
-
-
-
-
-    //Funcional
 
     private final Function<MSBootCoinOperationDTO, Mono<Transaction>> savedoPayment = dto -> {
 
@@ -106,95 +94,6 @@ public class MSBootCoinAccountTransactionService implements IMSBootCoinAccountTr
     };
 
 
-    /*
-
-    /// Logica Vieja
-    @Override
-    public Mono<Transaction> doYankiPayment(MSBootCoinOperationDTO dto) {
-        Mono<MSBootCoinAccount> fromAccount = accountService.findById(dto.getFromCellphoneAccount())
-                .switchIfEmpty(Mono.error(new EntityNotExistsException("Origin account doesn't exists")));
-        Mono<MSBootCoinAccount> toAccount = accountService.findById(dto.getToCellphoneAccount())
-                .switchIfEmpty(Mono.error(new EntityNotExistsException("Destiny account doesn't exists")));
-
-        return  Mono.zip(fromAccount,toAccount)
-                .filter(a-> !(dto.getFromCellphoneAccount().equals(dto.getToCellphoneAccount())))
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Account cannot be the same")))
-                .flatMap(a->saveTransactionPayment.apply(a,dto))
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Transaction error")));
-    }
-    public Mono<Transaction> doYankiOutgoutPayment(MSBootCoinOperationDTO dto) {
-        Mono<MSBootCoinAccount> fromAccount = accountService.findById(dto.getFromCellphoneAccount())
-                .switchIfEmpty(Mono.error(new EntityNotExistsException("Origin account doesn't exists")));
-        Mono<MSBootCoinAccount> toAccount = accountService.findById(dto.getToCellphoneAccount())
-                .switchIfEmpty(Mono.error(new EntityNotExistsException("Destiny account doesn't exists")));
-
-        return  Mono.zip(fromAccount,toAccount)
-                .filter(a-> !(dto.getFromCellphoneAccount().equals(dto.getToCellphoneAccount())))
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Account cannot be the same")))
-                .flatMap(a->saveTransactionOutGoutPayment.apply(a,dto))
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Transaction error")));
-    }
-    //Functions
-    private final BiFunction<Tuple2<MSBootCoinAccount,MSBootCoinAccount>,MSBootCoinOperationDTO, Mono<Transaction>> saveTransactionPayment
-            = (tuple2,dto) -> {
-
-           Transaction t = Transaction.builder()
-                .debit(dto.getAmount())
-                .credit(dto.getAmount())
-                .fromCellphoneAccount(tuple2.getT1().getCellphoneNumber())
-                .toCellphoneAccount(tuple2.getT2().getCellphoneNumber())
-                .transactiontype(TransactionType.PAYMENT)
-                .createDate(LocalDate.now())
-                .createDateTime(LocalDateTime.now())
-                .build();
-
-           return Mono.just(tuple2)
-                    .flatMap(t2-> Mono.just(t2.getT1().getLinkedDebitCard())
-                            .filter(a->a!=null)
-                            .flatMap(s->debitCardStream.doCardWithdraw(dto.getFromCellphoneAccount(),dto.getAmount()))
-                            .switchIfEmpty(accountService.updateBalanceSend(dto.getFromCellphoneAccount(),
-                                    dto.getAmount()))
-                            .thenReturn(t2)
-                    )
-                    .flatMap(t2-> Mono.just(t2.getT2().getLinkedDebitCard())
-                            .filter(a->a!=null)
-                            .flatMap(s->debitCardStream.doCardDeposit(dto.getToCellphoneAccount(),dto.getAmount()))
-                            .switchIfEmpty(accountService.updateBalanceReceive(dto.getToCellphoneAccount(),
-                                                                            dto.getAmount()))
-                            .thenReturn(t2)
-                    ).then(tRepository.save(t));
-    };
-    private final BiFunction<Tuple2<MSBootCoinAccount,MSBootCoinAccount>,MSBootCoinOperationDTO, Mono<Transaction>> saveTransactionOutGoutPayment
-            = (tuple2,dto) -> {
-
-        Transaction t = Transaction.builder()
-                .debit(dto.getAmount())
-                .credit(dto.getAmount())
-                .fromCellphoneAccount(tuple2.getT1().getCellphoneNumber())
-                .toCellphoneAccount(tuple2.getT2().getCellphoneNumber())
-                .transactiontype(TransactionType.PAYMENT)
-                .createDate(LocalDate.now())
-                .createDateTime(LocalDateTime.now())
-                .build();
-
-        return Mono.just(tuple2)
-                .flatMap(t2-> Mono.just(t2.getT1().getLinkedDebitCard())
-                        .filter(a->a!=null)
-                        .flatMap(s->debitCardStream.doCardWithdraw(dto.getFromCellphoneAccount(),dto.getAmount()))
-                        .then(accountService.updateBalanceReceive(dto.getFromCellphoneAccount(),
-                                dto.getAmount()))
-                        .thenReturn(t2)
-                )
-                .flatMap(t2-> Mono.just(t2.getT2().getLinkedDebitCard())
-                        .filter(a->a!=null)
-                        .flatMap(s->debitCardStream.doCardDeposit(dto.getToCellphoneAccount(),dto.getAmount()))
-                        .then(accountService.updateBalanceSend(dto.getToCellphoneAccount(),
-                                dto.getAmount()))
-                        .thenReturn(t2)
-                ).then(tRepository.save(t));
-    };
-
-     */
 }
 
 

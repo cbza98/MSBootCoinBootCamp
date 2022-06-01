@@ -26,5 +26,4 @@ public class DebitCard {
     private BigDecimal amount;
     private LocalDateTime createdate;
     private String codeBusinessPartner;
-    List<LinkedAccount> linkedAccountList;
 }

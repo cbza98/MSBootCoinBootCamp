@@ -1,6 +1,6 @@
 package com.MSBootCoinBootCamp.application.controller;
 
-import com.MSBootCoinBootCamp.domain.beans.MSBootCoinOperationDTO;
+import com.MSBootCoinBootCamp.domain.dtos.MSBootCoinOperationDTO;
 import com.MSBootCoinBootCamp.infraestructure.services.MSBootCoinAccountTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -21,19 +21,7 @@ import java.util.Map;
 public class MSBootCoinAccountTransactionController {
     @Autowired
     private MSBootCoinAccountTransactionService service;
-    @PostMapping("/Receive")
-    public Mono<ResponseEntity<Map<String, Object>>> BootCoinReceivePayment(@Valid @RequestBody Mono<MSBootCoinOperationDTO> request) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        return request.flatMap(a -> service.doReceive(a).map(c -> {
-            response.put("BootCoin Payment Operation", c);
-            response.put("message", "Successful BootCoin Payment Transaction ");
-            return ResponseEntity.created(URI.create("/YankiMobile/Actions/YankiOperations".concat(c.getTransactionId())))
-                    .contentType(MediaType.APPLICATION_JSON).body(response);
-        }));
-    }
-    @PostMapping("/Send")
+    @PostMapping("/TransactionExec")
     public Mono<ResponseEntity<Map<String, Object>>> BootCoinPayment(@Valid @RequestBody Mono<MSBootCoinOperationDTO> request) {
 
         Map<String, Object> response = new HashMap<>();

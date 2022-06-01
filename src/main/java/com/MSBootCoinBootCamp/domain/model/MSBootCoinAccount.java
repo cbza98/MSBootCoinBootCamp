@@ -30,9 +30,7 @@ public class MSBootCoinAccount {
 	private LocalDate createdDate;
 	@NotNull	
 	private Boolean valid;
-	private String linkedDebitCard;
 	private String email;
-	private String imei;
-	private String docIdemType;
-	private String docNum;
+	private String docidenttype;
+	private String docuident;
 }

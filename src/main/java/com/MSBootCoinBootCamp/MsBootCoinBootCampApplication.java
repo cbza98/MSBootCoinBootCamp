@@ -8,6 +8,7 @@ public class MsBootCoinBootCampApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MsBootCoinBootCampApplication.class, args);
+
 	}
 
 }

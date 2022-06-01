@@ -1,6 +1,6 @@
 package com.MSBootCoinBootCamp.application.controller;
-import com.MSBootCoinBootCamp.domain.beans.AvailableAmountDTO;
-import com.MSBootCoinBootCamp.domain.beans.CreateMSBootCoinAccountDTO;
+import com.MSBootCoinBootCamp.domain.dtos.AvailableAmountDTO;
+import com.MSBootCoinBootCamp.domain.dtos.CreateMSBootCoinAccountDTO;
 import com.MSBootCoinBootCamp.domain.model.MSBootCoinAccount;
 import com.MSBootCoinBootCamp.infraestructure.services.MSBootCoinAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +28,14 @@ public class MSBootCoinAccountController {
 		return service.findById(id);
 	}
 	@PostMapping
-	public Mono<ResponseEntity<Map<String, Object>>> createAccount(@Valid @RequestBody Mono<CreateMSBootCoinAccountDTO> request) {
+	public Mono<ResponseEntity<Map<String, Object>>> create(@Valid @RequestBody Mono<CreateMSBootCoinAccountDTO> request) {
 
 		Map<String, Object> response = new HashMap<>();
 
 		return request.flatMap(a -> service.createMSBootCoinAccount(a).map(c -> {
 			response.put("Account", c);
-			response.put("Message", "Account created Successfully");
-			return ResponseEntity.created(URI.create("/Accounts/Entities/Account/".concat(c.getCellphoneNumber())))
+			response.put("Message", "Account BootCoin created Successfully");
+			return ResponseEntity.created(URI.create("/BootCoin/Entities/BootCoin/".concat(c.getCellphoneNumber())))
 					.contentType(MediaType.APPLICATION_JSON).body(response);
 		}));
 	}

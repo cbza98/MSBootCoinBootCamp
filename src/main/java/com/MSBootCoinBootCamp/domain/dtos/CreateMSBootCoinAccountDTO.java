@@ -1,4 +1,4 @@
-package com.MSBootCoinBootCamp.domain.beans;
+package com.MSBootCoinBootCamp.domain.dtos;
 
 import lombok.*;
 
@@ -15,11 +15,8 @@ public class CreateMSBootCoinAccountDTO {
     @NotBlank
     private String cellphoneNumber;
     @NotBlank
-    private String imei;
+    private String docuidentype;
     @NotBlank
-    private String docIdemType;
-    @NotBlank
-    private String docNum;
-    private String cardnumber;
+    private String docuidentidad;
 }
 

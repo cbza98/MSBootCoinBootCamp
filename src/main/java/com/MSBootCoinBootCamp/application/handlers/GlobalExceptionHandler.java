@@ -4,7 +4,7 @@ package com.MSBootCoinBootCamp.application.handlers;
 
 import com.MSBootCoinBootCamp.application.exception.EntityAlreadyExistsException;
 import com.MSBootCoinBootCamp.application.exception.EntityNotExistsException;
-import com.MSBootCoinBootCamp.application.exception.ResourceNotCreatedException;
+import com.MSBootCoinBootCamp.application.exception.ResourceSpecificException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MarkerFactory;
 import org.springframework.http.HttpStatus;
@@ -59,13 +59,13 @@ public class GlobalExceptionHandler {
 		});
 	}
 	
-	@ExceptionHandler(ResourceNotCreatedException.class)
-	public Mono<ResponseEntity<Map<String, Object>>> handlerException(ResourceNotCreatedException ex) {
+	@ExceptionHandler(ResourceSpecificException.class)
+	public Mono<ResponseEntity<Map<String, Object>>> handlerException(ResourceSpecificException ex) {
 
 		Map<String, Object> response = new HashMap<>();
 
 		log.warn(MarkerFactory.getMarker("VALID"), ex.getMessage());
-		return Mono.just(ex).map(ResourceNotCreatedException::getMessage).flatMap(msg -> {
+		return Mono.just(ex).map(ResourceSpecificException::getMessage).flatMap(msg -> {
 
 			response.put("errors", msg);
 			response.put("timestamp", LocalDateTime.now());

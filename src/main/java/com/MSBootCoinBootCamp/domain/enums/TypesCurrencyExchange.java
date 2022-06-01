@@ -1,12 +1,12 @@
 package com.MSBootCoinBootCamp.domain.enums;
 
-public enum CurrencyExchange {
+public enum TypesCurrencyExchange {
     Soles("PEN"),
     BootCoin("BCN");
 
     public final String type;
 
-    CurrencyExchange(String type) {
+    TypesCurrencyExchange(String type) {
         this.type = type;
     }
 }

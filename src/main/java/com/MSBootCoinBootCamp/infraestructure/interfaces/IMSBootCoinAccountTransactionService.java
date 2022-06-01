@@ -1,6 +1,6 @@
 package com.MSBootCoinBootCamp.infraestructure.interfaces;
 
-import com.MSBootCoinBootCamp.domain.beans.MSBootCoinOperationDTO;
+import com.MSBootCoinBootCamp.domain.dtos.MSBootCoinOperationDTO;
 import com.MSBootCoinBootCamp.domain.model.Transaction;
 
 import org.springframework.http.ResponseEntity;
@@ -21,10 +21,7 @@ public interface IMSBootCoinAccountTransactionService {
 	
 	Flux<Transaction> saveAll(List<Transaction> a);
 
-
-
 	Mono<Transaction> doPayment(MSBootCoinOperationDTO operationDTO);
 
-	Mono<Transaction> doReceive(MSBootCoinOperationDTO operationDTO);
 
 }

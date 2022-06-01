@@ -1,6 +1,7 @@
 package com.MSBootCoinBootCamp.infraestructure.services;
 
 import com.MSBootCoinBootCamp.application.exception.EntityNotExistsException;
+import com.MSBootCoinBootCamp.domain.enums.TypesCurrencyExchange;
 import com.MSBootCoinBootCamp.domain.model.Operacion;
 import com.MSBootCoinBootCamp.domain.repository.OperationRepository;
 import com.MSBootCoinBootCamp.domain.repository.TransactionRepository;
@@ -32,6 +33,9 @@ public class OperationServices implements IOperationServices {
 
     @Override
     public Mono<Operacion> save(Operacion _Operacion) {
+
+        _Operacion.setMonedabase(TypesCurrencyExchange.Soles);
+        _Operacion.setMonedacambio(TypesCurrencyExchange.BootCoin);
         return repository.save(_Operacion);
     }
 }

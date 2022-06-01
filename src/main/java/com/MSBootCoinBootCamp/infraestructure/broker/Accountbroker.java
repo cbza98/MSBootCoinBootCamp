@@ -1,7 +1,7 @@
-package com.MSBootCoinBootCamp.infraestructure.kafkaservices;
+package com.MSBootCoinBootCamp.infraestructure.broker;
 
 import com.MSBootCoinBootCamp.application.exception.EntityAlreadyExistsException;
-import com.MSBootCoinBootCamp.domain.beans.DebitCardDTO;
+import com.MSBootCoinBootCamp.domain.dtos.DebitCardDTO;
 import com.MSBootCoinBootCamp.domain.model.DebitCard;
 import com.MSBootCoinBootCamp.domain.model.Message;
 import com.MSBootCoinBootCamp.domain.repository.DebitCardMSBootCoinRepository;
@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.util.function.Consumer;
 
 @Component
-public class DebitCardStream implements IDebitCardStream {
+public class Accountbroker implements IAccountbroker {
 
     @Autowired
     private DebitCardMSBootCoinRepository servicesdebitcard;

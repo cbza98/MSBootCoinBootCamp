@@ -2,16 +2,14 @@ package com.MSBootCoinBootCamp.infraestructure.services;
 
 
 import com.MSBootCoinBootCamp.application.exception.EntityNotExistsException;
-import com.MSBootCoinBootCamp.application.exception.ResourceNotCreatedException;
-import com.MSBootCoinBootCamp.application.helpers.TextUtils;
-import com.MSBootCoinBootCamp.domain.beans.AvailableAmountDTO;
-import com.MSBootCoinBootCamp.domain.beans.CreateMSBootCoinAccountDTO;
-import com.MSBootCoinBootCamp.domain.beans.CreateMSBootCoinAccountWithCardDTO;
+import com.MSBootCoinBootCamp.application.exception.ResourceSpecificException;
+import com.MSBootCoinBootCamp.domain.dtos.AvailableAmountDTO;
+import com.MSBootCoinBootCamp.domain.dtos.CreateMSBootCoinAccountDTO;
+import com.MSBootCoinBootCamp.domain.dtos.CreateMSBootCoinAccountWithCardDTO;
 import com.MSBootCoinBootCamp.domain.model.MSBootCoinAccount;
-import com.MSBootCoinBootCamp.domain.model.Message;
 import com.MSBootCoinBootCamp.domain.repository.MSBootCoinRepository;
 import com.MSBootCoinBootCamp.infraestructure.interfaces.IMSBootCoinAccountService;
-import com.MSBootCoinBootCamp.infraestructure.kafkaservices.DebitCardStream;
+import com.MSBootCoinBootCamp.infraestructure.broker.Accountbroker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -35,7 +33,7 @@ public class MSBootCoinAccountService implements IMSBootCoinAccountService {
     private DebitCardService debitCardService;
 
     @Autowired
-    private DebitCardStream senddebit;
+    private Accountbroker senddebit;
 
     // Crud
     @Override
@@ -65,11 +63,10 @@ public class MSBootCoinAccountService implements IMSBootCoinAccountService {
         return repository.findById(_request.getCellphoneNumber()).flatMap(a -> {
             a.setCellphoneNumber(_request.getCellphoneNumber());
             a.setValid(_request.getValid());
-            a.setDocIdemType(_request.getDocIdemType());
-            a.setDocNum(_request.getDocNum());
+            a.setDocidenttype(_request.getDocidenttype());
+            a.setDocuident(_request.getDocuident());
             a.setEmail(_request.getEmail());
             a.setValid(_request.getValid());
-            a.setLinkedDebitCard(_request.getLinkedDebitCard());
             return repository.save(a);
         }).switchIfEmpty(Mono.error(new EntityNotExistsException()));
     }
@@ -86,45 +83,29 @@ public class MSBootCoinAccountService implements IMSBootCoinAccountService {
     }
 
     @Override
-    public Mono<BigDecimal> updateBalanceSend(String id, String linkcard, BigDecimal balance) {
+    public Mono<BigDecimal> updateBalanceSend(String id, BigDecimal balance) {
         Mono<BigDecimal> returnvaluesend = repository.findById(id).flatMap(a -> {
             BigDecimal bigDecimal = a.getBalance().subtract(balance);
             a.setBalance(bigDecimal);
             return repository.save(a).map(b -> b.getBalance());
         });
 
-        if (!TextUtils.isNullOrEmpty(linkcard)) {
-            Message M = Message.builder()
-                    .amount(balance)
-                    .referencia1(linkcard)
-                    .build();
-            senddebit.sendMessage(M);
-        }
-
         return returnvaluesend;
 
     }
 
     @Override
-    public Mono<BigDecimal> updateBalanceReceive(String id, String linkcardreceive, BigDecimal balance) {
+    public Mono<BigDecimal> updateBalanceReceive(String id, BigDecimal balance) {
 
 
         Mono<BigDecimal> returnvalue = repository.findById(id)
                 .filter(a -> balance.compareTo(a.getBalance()) <= 0)
-                .switchIfEmpty(Mono.error(new ResourceNotCreatedException("Withdrawal is more than actual balance")))
+                .switchIfEmpty(Mono.error(new ResourceSpecificException("Withdrawal is more than actual balance")))
                 .flatMap(a -> {
 
             a.setBalance(a.getBalance().add(balance));
             return repository.save(a).map(b -> b.getBalance());
         });
-
-        if (!TextUtils.isNullOrEmpty(linkcardreceive)) {
-            Message M = Message.builder()
-                    .amount(balance)
-                    .referencia1(linkcardreceive)
-                    .build();
-            senddebit.sendMessage(M);
-        }
 
 
         return returnvalue;
@@ -136,17 +117,33 @@ public class MSBootCoinAccountService implements IMSBootCoinAccountService {
 
         Mono<Boolean> _bool = repository.existsByCellphoneNumber(account.getCellphoneNumber());
 
-        return Mono.zip(_bool, Mono.just(account)).filter(t -> cellphoneValidation.test(t.getT1().booleanValue())).switchIfEmpty(Mono.error(new ResourceNotCreatedException("CellPhone has associate"))).flatMap(t -> mapToAccountAndSave.apply(t.getT2()));
+        return Mono.zip(_bool, Mono.just(account)).filter(t -> cellphoneValidation.test(t.getT1().booleanValue())).switchIfEmpty(Mono.error(new ResourceSpecificException("CellPhone has associate"))).flatMap(t -> mapToAccountAndSave.apply(t.getT2()));
     }
 
     private final Function<CreateMSBootCoinAccountDTO, Mono<MSBootCoinAccount>> mapToAccountAndSave = dto -> {
 
-        MSBootCoinAccount a = MSBootCoinAccount.builder().valid(true).balance(new BigDecimal("0.00")).cellphoneNumber(dto.getCellphoneNumber()).docIdemType(dto.getDocIdemType()).docNum(dto.getDocNum()).imei(dto.getImei()).createdDate(LocalDate.now()).createdDateTime(LocalDateTime.now()).email(dto.getEmail()).build();
+        MSBootCoinAccount a = MSBootCoinAccount.builder()
+                .valid(true)
+                .balance(new BigDecimal("0.00"))
+                .cellphoneNumber(dto.getCellphoneNumber())
+                .docidenttype(dto.getDocuidentype())
+                .docuident(dto.getDocuidentidad())
+                .createdDate(LocalDate.now())
+                .createdDateTime(LocalDateTime.now())
+                .email(dto.getEmail()).build();
         return repository.save(a);
     };
     private final Function<CreateMSBootCoinAccountWithCardDTO, Mono<MSBootCoinAccount>> mapToAccountAndSaveWithCard = dto -> {
 
-        MSBootCoinAccount a = MSBootCoinAccount.builder().valid(true).balance(new BigDecimal("0.00")).cellphoneNumber(dto.getCellphoneNumber()).docIdemType(dto.getDocIdemType()).docNum(dto.getDocNum()).imei(dto.getImei()).createdDate(LocalDate.now()).createdDateTime(LocalDateTime.now()).email(dto.getEmail()).linkedDebitCard(dto.getDebitCardNumber()).build();
+        MSBootCoinAccount a = MSBootCoinAccount.builder()
+                .valid(true)
+                .balance(new BigDecimal("0.00"))
+                .cellphoneNumber(dto.getCellphoneNumber())
+                .docidenttype(dto.getDocIdemType())
+                .docuident(dto.getDocNum())
+                .createdDate(LocalDate.now())
+                .createdDateTime(LocalDateTime.now()).email(dto.getEmail())
+                .build();
         return repository.save(a);
     };
     private final Predicate<Boolean> cellphoneValidation = t -> t.equals(false);

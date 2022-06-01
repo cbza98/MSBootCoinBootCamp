@@ -1,7 +1,7 @@
 package com.MSBootCoinBootCamp.infraestructure.services;
 
 import com.MSBootCoinBootCamp.application.exception.EntityNotExistsException;
-import com.MSBootCoinBootCamp.domain.beans.DebitCardBalanceDTO;
+import com.MSBootCoinBootCamp.domain.dtos.DebitCardBalanceDTO;
 import com.MSBootCoinBootCamp.domain.model.DebitCard;
 import com.MSBootCoinBootCamp.domain.repository.DebitCardMSBootCoinRepository;
 import com.MSBootCoinBootCamp.infraestructure.interfaces.IDebitCardService;

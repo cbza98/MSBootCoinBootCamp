@@ -1,12 +1,12 @@
-package com.MSBootCoinBootCamp.infraestructure.kafkaservices;
+package com.MSBootCoinBootCamp.infraestructure.broker;
 
-import com.MSBootCoinBootCamp.domain.beans.DebitCardDTO;
+import com.MSBootCoinBootCamp.domain.dtos.DebitCardDTO;
 import com.MSBootCoinBootCamp.domain.model.DebitCard;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 
-public interface IDebitCardStream {
+public interface IAccountbroker {
     Mono<DebitCardDTO> findById(String debitCardNumber);
 
     Mono<DebitCard> doCardWithdraw(String debitCardNumber, BigDecimal amount);

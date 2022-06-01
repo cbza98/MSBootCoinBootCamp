@@ -1,6 +1,6 @@
 package com.MSBootCoinBootCamp.application.exception;
 
-public class ResourceNotCreatedException extends Exception {
+public class ResourceSpecificException extends Exception {
 
 	/**
 	 * 
@@ -9,11 +9,11 @@ public class ResourceNotCreatedException extends Exception {
 	
 	private String message = "Account couldn't be created";
 	
-	public ResourceNotCreatedException() {
+	public ResourceSpecificException() {
 
 	}
 
-	public ResourceNotCreatedException(String message) {
+	public ResourceSpecificException(String message) {
 		this.message = message;
 	}
 

@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDate;
+
 @Service
 public class ExchangeRateService implements IExchangeRateService {
     @Autowired
@@ -32,6 +35,7 @@ public class ExchangeRateService implements IExchangeRateService {
 
     @Override
     public Mono<TipoCambio> save(TipoCambio _TipoCambio) {
+        _TipoCambio.setFechacambio(LocalDate.now());
         return repository.save(_TipoCambio);
     }
 }

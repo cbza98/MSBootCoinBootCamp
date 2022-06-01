@@ -1,4 +1,4 @@
-package com.MSBootCoinBootCamp.domain.beans;
+package com.MSBootCoinBootCamp.domain.dtos;
 
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;

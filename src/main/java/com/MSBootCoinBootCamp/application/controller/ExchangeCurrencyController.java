@@ -31,7 +31,7 @@ public class ExchangeCurrencyController {
         return service.findById(id);
     }
     @PostMapping
-    public Mono<ResponseEntity<Map<String, Object>>> createAccount(@Valid @RequestBody Mono<TipoCambio> request) {
+    public Mono<ResponseEntity<Map<String, Object>>> create(@Valid @RequestBody Mono<TipoCambio> request) {
 
         Map<String, Object> response = new HashMap<>();
 

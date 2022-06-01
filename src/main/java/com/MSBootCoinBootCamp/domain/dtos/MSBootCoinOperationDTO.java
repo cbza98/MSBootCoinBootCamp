@@ -1,4 +1,4 @@
-package com.MSBootCoinBootCamp.domain.beans;
+package com.MSBootCoinBootCamp.domain.dtos;
 
 import lombok.*;
 
@@ -12,14 +12,13 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DebitCardOperationDTO {
+public class MSBootCoinOperationDTO {
     @NotBlank
-    private String debiCardNumber;
+    private String fromCellphoneAccount;
     @NotBlank
-    private String cvv;
-    @NotBlank
-    private String expireDate;
+    private String toCellphoneAccount;
     @NotNull
     @Digits(integer =20, fraction=6)
     private BigDecimal amount;
+
 }

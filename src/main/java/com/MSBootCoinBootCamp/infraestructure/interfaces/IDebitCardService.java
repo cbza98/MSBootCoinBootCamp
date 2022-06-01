@@ -1,6 +1,6 @@
 package com.MSBootCoinBootCamp.infraestructure.interfaces;
 
-import com.MSBootCoinBootCamp.domain.beans.DebitCardBalanceDTO;
+import com.MSBootCoinBootCamp.domain.dtos.DebitCardBalanceDTO;
 import com.MSBootCoinBootCamp.domain.model.DebitCard;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
